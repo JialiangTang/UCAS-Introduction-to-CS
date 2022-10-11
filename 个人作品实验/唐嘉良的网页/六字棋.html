@@ -1,0 +1,408 @@
+
+<html>
+
+<head>
+    <meta charset="UTF-8">
+
+    <title>
+        六子棋
+    </title>
+    <style>
+        #chessboard {
+            display: block;
+            margin: auto auto;
+            background-color: rgb(151, 98, 44);
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="chessboard" width="608px" height="608px"> </canvas>
+    <script>
+        var chessboard = document.getElementById("chessboard");
+        var ctx = chessboard.getContext("2d");
+        for (var i = 0; i < 19; i++) {
+            ctx.beginPath();
+            ctx.moveTo(16, 16 + i * 32);
+            ctx.lineTo(592, 16 + i * 32);
+            ctx.closePath();
+            ctx.stroke();
+        }
+        for (var i = 0; i < 19; i++) {
+            ctx.beginPath();
+            ctx.moveTo(16 + i * 32, 16);
+            ctx.lineTo(16 + i * 32, 592);
+            ctx.closePath();
+            ctx.stroke();
+        }
+
+
+        ctx.fillStyle = "black"
+        ctx.beginPath();
+        ctx.arc(304, 304, 7, 0, 2 * Math.PI)
+        ctx.fill();
+        ctx.closePath();
+        ctx.beginPath();
+        ctx.arc(112, 112, 7, 0, 2 * Math.PI)
+        ctx.fill();
+        ctx.closePath();
+        ctx.beginPath();
+        ctx.arc(112, 304, 7, 0, 2 * Math.PI)
+        ctx.fill();
+        ctx.closePath();
+        ctx.beginPath();
+        ctx.arc(112, 496, 7, 0, 2 * Math.PI)
+        ctx.fill();
+        ctx.closePath();
+        ctx.beginPath();
+        ctx.arc(304, 112, 7, 0, 2 * Math.PI)
+        ctx.fill();
+        ctx.closePath();
+        ctx.beginPath();
+        ctx.arc(304, 496, 7, 0, 2 * Math.PI)
+        ctx.fill();
+        ctx.closePath();
+        ctx.beginPath();
+        ctx.arc(496, 112, 7, 0, 2 * Math.PI)
+        ctx.fill();
+        ctx.closePath();
+        ctx.beginPath();
+        ctx.arc(496, 304, 7, 0, 2 * Math.PI)
+        ctx.fill();
+        ctx.closePath();
+        ctx.beginPath();
+        ctx.arc(496, 496, 7, 0, 2 * Math.PI)
+        ctx.fill();
+        ctx.closePath();
+
+        function move(i, j) {
+            ctx.beginPath();
+            ctx.arc(16 + i * 32, 16 + j * 32, 12, 0, 2 * Math.PI)
+            ctx.closePath()
+            var color;
+            if (player) {
+                color="black"
+            }
+            else {
+                color="white"
+            }
+            ctx.fillStyle = color;
+            ctx.fill();
+        }
+
+        var chess = [];
+        for (var i = 0; i < 19; i++) {
+            chess[i] = []
+            for (var j = 0; j < 19; j++) {
+                chess[i][j] = 0
+            }
+        }
+
+        var player = true;
+        var gameover = false;
+
+        var possible_winnings = 0
+        var winning_situations = []
+        for (var i = 0; i < 19; i++) {
+            winning_situations[i] = []
+            for (var j = 0; j < 19; j++) {
+                winning_situations[i][j] = []
+            }
+        }
+        
+        for (var i = 0; i < 19; i++) {
+            for (var j = 0; j < 14; j++) {
+                for (var k = 0; k < 6; k++) {
+                    winning_situations[j + k][i][possible_winnings] = true;
+                }
+                possible_winnings++
+            }
+        }
+
+        for (var i = 0; i < 19; i++) {
+            for (var j = 0; j < 14; j++) {
+                for (var k = 0; k < 6; k++) {
+                    winning_situations[i][j + k][possible_winnings] = true;
+                }
+                possible_winnings++
+            }
+        }
+
+        for (var i = 0; i < 14; i++) {
+            for (var j = 0; j < 14; j++) {
+                for (var k = 0; k < 6; k++) {
+                    winning_situations[i + k][j + k][possible_winnings] = true;
+                }
+                possible_winnings++
+            }
+        }
+
+        for (var i = 0; i < 14; i++) {
+            for (var j = 18; j > 4; j--) {
+                for (var k = 0; k < 6; k++) {
+                    winning_situations[i + k][j - k][possible_winnings] = true
+                }
+                possible_winnings++
+            }
+        }
+
+        var playerwin = [];
+        for (var i = 0; i < possible_winnings; i++) {
+            playerwin[i] = 0
+        }
+        var computer_disabled_win = []
+        for (var i = 0; i < possible_winnings; i++) {
+            computer_disabled_win[i] = 0
+        }
+        var player_initial = 1
+
+        chessboard.onclick = function (position) {
+            if (gameover) {
+                return;
+            }
+            if (!player) {
+                return;
+            }
+
+            var x = position.offsetX;
+            var y = position.offsetY;
+            var i = Math.floor(x / 32);
+            var j = Math.floor(y / 32);
+
+            if (chess[i][j] == 0) {
+                move(i, j);
+                chess[i][j] = 1;
+
+                for (var k = 0; k < possible_winnings; k++) {
+                    if (winning_situations[i][j][k]) {
+                        playerwin[k]++;
+                        if (playerwin[k] == 6) {
+                            setTimeout("alert('战胜人工智障还不是轻而易举嘛！')", 200)
+                            gameover = true;
+                        }
+                    }
+                }
+            }
+
+            if (!gameover) {
+                player_initial++
+                if (player_initial == 2) {
+                    player = !player;
+                    player_initial = 0
+                    setTimeout("computer_disabled1()", 500)
+                }
+            }
+        }
+
+        var u = 0;
+        var v = 0;
+        var computer_disabled_initial = 0
+        function computer_disabled1() {
+            var computer_disabled_score = [];
+            var player_score = [];
+            for (var i = 0; i < 19; i++) {
+                computer_disabled_score[i] = []
+                player_score[i] = [];
+
+                for (var j = 0; j < 19; j++) {
+                    computer_disabled_score[i][j] = 0;
+                    player_score[i][j] = 0;
+                }
+            }
+
+            var score = 0;
+
+            for (var i = 0; i < 19; i++) {
+                for (var j = 0; j < 19; j++) {
+                    if (chess[i][j] == 0) {
+                        for (var k = 0; k < possible_winnings; k++) {
+                            if (winning_situations[i][j][k]) {
+                                if (computer_disabled_win[k] == 1) {
+                                    computer_disabled_score[i][j] +=300;
+                                }
+                                else if (computer_disabled_win[k] == 2) {
+                                    computer_disabled_score[i][j] += 600;
+                                }
+                                else if (computer_disabled_win[k] == 3) {
+                                    computer_disabled_score[i][j] += 1500;
+                                }
+                                else if (computer_disabled_win[k] == 4) {
+                                    computer_disabled_score[i][j] += 8000;
+                                }
+                                else if (computer_disabled_win[k] == 5) {
+                                    computer_disabled_score[i][j] += 80000;
+                                }
+
+                                if (playerwin[k] == 1) {
+                                    player_score[i][j] += 200;
+                                }
+                                else if (playerwin[k] == 2) {
+                                    player_score[i][j] += 400;
+                                }
+                                else if (playerwin[k] == 3) {
+                                    player_score[i][j] += 1000;
+                                }
+                                else if (playerwin[k] == 4) {
+                                    player_score[i][j] += 5000;
+                                }
+                                else if (playerwin[k] == 5) {
+                                    player_score[i][j] += 50000;
+                                }
+                            }
+
+                        }
+                        if (computer_disabled_score[i][j] > score) {
+                            score = computer_disabled_score[i][j]
+                            u = i;
+                            v = j;
+
+                        }
+                        else if (computer_disabled_score[i][j] == score) {
+                            if (player_score[i][j] > score) {
+                                score = player_score[i][j];
+                                u = i;
+                                v = j;
+                            }
+                        }
+
+                        if (player_score[i][j] > score) {
+                            score = player_score[i][j];
+                            u = i;
+                            v = j;
+                        }
+                        else if (player_score[i][j] == score) {
+                            if (computer_disabled_score[i][j] > score) {
+                                score = computer_disabled_score[i][j];
+                                u = i;
+                                v = j;
+                            }
+                        }
+                    }
+                }
+            }
+
+            move(u, v);
+            chess[u][v] = 1;
+
+            for (var k = 0; k < possible_winnings; k++) {
+                if (winning_situations[u][v][k]) {
+                    computer_disabled_win[k]++;
+                    if (computer_disabled_win[k] == 6) {
+                        setTimeout("alert('你醒啦？你被人工智障打败啦！')", 200)
+                        gameover = true
+                    }
+                }
+            }
+
+
+            if (!gameover) {
+                setTimeout("computer_disabled2()", 500)
+            }
+        }
+
+        function computer_disabled2() {
+            var computer_disabled_score = [];
+            var player_score = [];
+            for (var i = 0; i < 19; i++) {
+                computer_disabled_score[i] = []
+                player_score[i] = [];
+
+                for (var j = 0; j < 19; j++) {
+                    computer_disabled_score[i][j] = 0;
+                    player_score[i][j] = 0;
+                }
+            }
+
+            var score = 0;
+
+            for (var i = 0; i < 19; i++) {
+                for (var j = 0; j < 19; j++) {
+                    if (chess[i][j] == 0) {
+                        for (var k = 0; k < possible_winnings; k++) {
+                            if (winning_situations[i][j][k]) {
+                                if (computer_disabled_win[k] == 1) {
+                                    computer_disabled_score[i][j] += 200;
+                                }
+                                else if (computer_disabled_win[k] == 2) {
+                                    computer_disabled_score[i][j] += 400;
+                                }
+                                else if (computer_disabled_win[k] == 3) {
+                                    computer_disabled_score[i][j] += 1000;
+                                }
+                                else if (computer_disabled_win[k] == 4) {
+                                    computer_disabled_score[i][j] += 4000;
+                                }
+                                else if (computer_disabled_win[k] == 5) {
+                                    computer_disabled_score[i][j] += 100000;
+                                }
+
+                                if (playerwin[k] == 1) {
+                                    player_score[i][j] += 300;
+                                }
+                                else if (playerwin[k] == 2) {
+                                    player_score[i][j] += 600;
+                                }
+                                else if (playerwin[k] == 3) {
+                                    player_score[i][j] += 1500;
+                                }
+                                else if (playerwin[k] == 4) {
+                                    player_score[i][j] += 5000;
+                                }
+                                else if (playerwin[k] == 5) {
+                                    player_score[i][j] += 50000;
+                                }
+
+                            }
+                        }
+                        if (computer_disabled_score[i][j] > score) {
+                            score = computer_disabled_score[i][j]
+                            u = i;
+                            v = j;
+
+                        }
+                        else if (computer_disabled_score[i][j] == score) {
+                            if (player_score[i][j] > score) {
+                                score = player_score[i][j];
+                                u = i;
+                                v = j;
+                            }
+                        }
+
+                        if (player_score[i][j] > score) {
+                            score = player_score[i][j];
+                            u = i;
+                            v = j;
+                        }
+                        else if (player_score[i][j] == score) {
+                            if (computer_disabled_score[i][j] > score) {
+                                score = computer_disabled_score[i][j];
+                                u = i;
+                                v = j;
+                            }
+                        }
+                    }
+                }
+            }
+
+            move(u, v);
+            chess[u][v] = 1;
+
+            for (var k = 0; k < possible_winnings; k++) {
+                if (winning_situations[u][v][k]) {
+                    computer_disabled_win[k]++;
+                    if (computer_disabled_win[k] == 6) {
+                        setTimeout("alert('你醒啦？你被人工智障打败啦！')", 200)
+                        gameover = true
+                    }
+                }
+            }
+
+            if (!gameover) {
+                player = !player;
+
+            }
+        }
+
+    </script>
+</body
